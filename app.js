@@ -250,8 +250,23 @@
       }
       const source = document.createElement('div');
       source.className = 'review-source';
-      source.textContent = `Rujukan materi: ${answer.sourceHeading}`;
-      item.append(top, question, answerLine, source);
+      source.textContent = `Materi terkait: ${answer.sourceHeading}`;
+      const explanationButton = document.createElement('button');
+      explanationButton.type = 'button';
+      explanationButton.className = 'explanation-toggle';
+      explanationButton.setAttribute('aria-expanded', 'false');
+      explanationButton.textContent = 'Lihat penjelasan';
+      const explanation = document.createElement('div');
+      explanation.className = 'explanation-panel';
+      explanation.hidden = true;
+      explanation.textContent = answer.explanation;
+      explanationButton.addEventListener('click', () => {
+        const isOpen = !explanation.hidden;
+        explanation.hidden = isOpen;
+        explanationButton.setAttribute('aria-expanded', String(!isOpen));
+        explanationButton.textContent = isOpen ? 'Lihat penjelasan' : 'Sembunyikan penjelasan';
+      });
+      item.append(top, question, answerLine, source, explanationButton, explanation);
       list.appendChild(item);
     });
   }

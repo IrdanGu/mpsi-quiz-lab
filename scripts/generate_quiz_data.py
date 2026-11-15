@@ -8,10 +8,36 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 SOURCE = ROOT / "University" / "PSSI" / "materi" / "md" / "mssi-soal-bab-01-07.md"
+BOOK = ROOT / "University" / "PSSI" / "materi" / "md" / "buku-ajar-mssi-clean-200page.md"
 OUTPUT = Path(__file__).resolve().parents[1] / "data.js"
 
 
-def parse_questions(text: str) -> list[dict]:
+def source_sections(text: str) -> dict[str, str]:
+    sections: dict[str, str] = {}
+    lines = text.splitlines()
+    headings: list[tuple[int, str]] = []
+    for index, line in enumerate(lines):
+        match = re.match(r"^#{1,6}\s+(.+?)\s*$", line)
+        if match:
+            headings.append((index, match.group(1).strip()))
+
+    for position, (start, title) in enumerate(headings):
+        end = len(lines)
+        current_level = len(re.match(r"^#+", lines[start]).group(0))
+        for next_start, _ in headings[position + 1:]:
+            next_level = len(re.match(r"^#+", lines[next_start]).group(0))
+            if next_level <= current_level:
+                end = next_start
+                break
+        content = "\n".join(lines[start + 1:end])
+        content = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", content)
+        content = re.sub(r"<[^>]+>", " ", content)
+        content = re.sub(r"\s+", " ", content).strip()
+        sections[title] = content[:2200].rstrip() + ("…" if len(content) > 2200 else "")
+    return sections
+
+
+def parse_questions(text: str, details: dict[str, str]) -> list[dict]:
     questions: list[dict] = []
     chapter = None
     in_mc = False
@@ -80,6 +106,7 @@ def parse_questions(text: str) -> list[dict]:
                 "correctIndex": ord(correct_letter) - ord("a"),
                 "sourceHeading": source_heading,
                 "sourceLabel": source_label,
+                "explanation": details.get(source_heading, "Baca bagian materi terkait untuk memahami konsep ini."),
             }
         )
         i = j + 1
@@ -90,7 +117,8 @@ def parse_questions(text: str) -> list[dict]:
 
 
 def main() -> None:
-    questions = parse_questions(SOURCE.read_text(encoding="utf-8"))
+    details = source_sections(BOOK.read_text(encoding="utf-8"))
+    questions = parse_questions(SOURCE.read_text(encoding="utf-8"), details)
     payload = json.dumps(questions, ensure_ascii=False, indent=2)
     OUTPUT.write_text(
         "// Generated from PSSI/materi/md/mssi-soal-bab-01-07.md.\n"
