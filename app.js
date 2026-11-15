@@ -10,6 +10,7 @@
 
   const $ = (id) => document.getElementById(id);
   const chapterView = $('chapter-view');
+  const historyView = $('history-view');
   const quizView = $('quiz-view');
   const resultView = $('result-view');
   const progressBar = $('progress-bar');
@@ -76,21 +77,22 @@
       const latest = records.at(-1);
       const best = records.reduce((max, record) => Math.max(max, record.accuracy), 0);
       const status = latest ? masteryFor(latest.accuracy) : null;
-      const card = document.createElement('button');
+      const card = document.createElement('article');
       card.className = 'chapter-card';
-      card.type = 'button';
       card.innerHTML = `
         <span class="chapter-no">BAB ${String(chapter).padStart(2, '0')}</span>
         <span><h2></h2><p>${records.length ? `${records.length} percobaan · terbaik ${best}%` : 'Belum ada percobaan'}</p></span>
-        <span class="chapter-status ${status ? status.className : ''}">${status ? status.label : 'Mulai ronde →'}</span>`;
+        <span class="chapter-status ${status ? status.className : ''}">${status ? status.label : 'Belum ada percobaan'}</span>
+        <span class="card-actions card-actions-stack"><button class="card-start button button-dark" type="button">Mulai ronde <span>→</span></button><button class="card-history button button-outline" type="button" ${records.length ? '' : 'disabled'}>Record sebelumnya${records.length ? ` (${records.length})` : ''}</button></span>`;
       card.querySelector('h2').textContent = source?.chapterTitle || `Bab ${chapter}`;
-      card.addEventListener('click', () => startRound('chapter', chapter));
+      card.querySelector('.card-start').addEventListener('click', () => startRound('chapter', chapter));
+      card.querySelector('.card-history').addEventListener('click', () => showHistory('chapter', chapter));
       grid.appendChild(card);
     }
   }
 
   function showView(view) {
-    [chapterView, quizView, resultView].forEach((item) => { item.hidden = item !== view; });
+    [chapterView, historyView, quizView, resultView].forEach((item) => { item.hidden = item !== view; });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -271,11 +273,76 @@
     });
   }
 
+  function makeHistoryAnswer(answer, index) {
+    const item = document.createElement('article');
+    item.className = `review-item ${answer.isCorrect ? 'is-right' : 'is-wrong'}`;
+    const top = document.createElement('div');
+    top.className = 'review-top';
+    const label = document.createElement('span');
+    label.textContent = `SOAL ${String(index + 1).padStart(2, '0')}`;
+    const status = document.createElement('span');
+    status.className = `review-status ${answer.isCorrect ? 'right' : 'wrong'}`;
+    status.textContent = answer.isCorrect ? 'BENAR' : 'SALAH';
+    top.append(label, status);
+    const question = document.createElement('p');
+    question.className = 'review-question';
+    question.textContent = answer.question;
+    const answerLine = document.createElement('div');
+    answerLine.className = 'review-answer';
+    answerLine.innerHTML = 'Jawaban kamu: <strong></strong>';
+    answerLine.querySelector('strong').textContent = `${LETTERS[answer.selectedIndex]}. ${answer.options[answer.selectedIndex]}`;
+    if (!answer.isCorrect) {
+      const correctLine = document.createElement('div');
+      correctLine.innerHTML = 'Seharusnya: <strong></strong>';
+      correctLine.querySelector('strong').textContent = `${LETTERS[answer.correctIndex]}. ${answer.options[answer.correctIndex]}`;
+      answerLine.appendChild(correctLine);
+    }
+    const toggle = document.createElement('button');
+    toggle.className = 'explanation-toggle';
+    toggle.type = 'button';
+    toggle.textContent = 'Lihat penjelasan';
+    const explanation = document.createElement('div');
+    explanation.className = 'explanation-panel';
+    explanation.hidden = true;
+    explanation.textContent = answer.explanation;
+    toggle.addEventListener('click', () => {
+      explanation.hidden = !explanation.hidden;
+      toggle.textContent = explanation.hidden ? 'Lihat penjelasan' : 'Sembunyikan penjelasan';
+      toggle.setAttribute('aria-expanded', String(!explanation.hidden));
+    });
+    item.append(top, question, answerLine, toggle, explanation);
+    return item;
+  }
+
+  function showHistory(mode, chapter = null) {
+    const records = readRecords().filter((record) => record.mode === mode && (mode === 'boss' || record.chapter === chapter)).reverse();
+    $('history-title').textContent = mode === 'boss' ? 'Record Ronde Boss' : `Record Bab ${chapter}`;
+    const list = $('history-list');
+    list.innerHTML = '';
+    if (!records.length) {
+      list.innerHTML = '<div class="empty-state">Belum ada record untuk ronde ini. Kamu bisa mulai ronde kapan saja.</div>';
+      showView(historyView);
+      return;
+    }
+    records.forEach((record, recordIndex) => {
+      const wrapper = document.createElement('article');
+      wrapper.className = 'history-record';
+      const mastery = masteryFor(record.accuracy);
+      wrapper.innerHTML = `<div class="history-record-head"><div><div class="eyebrow">Percobaan #${records.length - recordIndex}</div><h2>${record.correct}/${record.total} benar · ${record.accuracy}%</h2></div><div class="history-record-date">${formatDate(record.createdAt)}<br>${formatTime(record.durationSeconds)}</div></div><div class="history-record-status ${mastery.className}">${mastery.label}</div><div class="history-answer-list"></div>`;
+      const answerList = wrapper.querySelector('.history-answer-list');
+      record.answers.forEach((answer, index) => answerList.appendChild(makeHistoryAnswer(answer, index)));
+      list.appendChild(wrapper);
+    });
+    showView(historyView);
+  }
+
   $('boss-start').addEventListener('click', () => startRound('boss'));
+  $('boss-history').addEventListener('click', () => showHistory('boss'));
   $('next-button').addEventListener('click', nextQuestion);
   $('result-next').addEventListener('click', () => { renderChapterCards(); showView(chapterView); headerMode.textContent = 'PILIH BAB'; progressBar.style.width = '0%'; });
   $('result-retry').addEventListener('click', () => startRound(state.mode, state.chapter));
   $('brand-link').addEventListener('click', (event) => { event.preventDefault(); renderChapterCards(); showView(chapterView); });
+  $('history-back').addEventListener('click', () => { renderChapterCards(); showView(chapterView); headerMode.textContent = 'PILIH BAB'; });
   document.addEventListener('keydown', (event) => {
     if (quizView.hidden) return;
     const key = event.key.toUpperCase();

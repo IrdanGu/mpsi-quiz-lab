@@ -35,10 +35,22 @@
           <h2>Semua bab, satu tantangan.</h2>
           <p>Soal acak dari Bab 1–7. Cocok untuk menguji apakah pemahamanmu sudah merata.</p>
         </div>
-        <button class="button button-light" id="boss-start">Mulai Boss <span>→</span></button>
+        <div class="card-actions">
+          <button class="button button-light" id="boss-start">Mulai Boss <span>→</span></button>
+          <button class="button button-ghost" id="boss-history">Record sebelumnya</button>
+        </div>
       </article>
 
       <div class="empty-state" id="empty-state" hidden>Belum ada record. Selesaikan satu ronde untuk melihat perkembanganmu.</div>
+    </section>
+
+    <section id="history-view" class="view" hidden>
+      <div class="result-heading">
+        <div><div class="eyebrow">Arsip percobaan</div><h1 id="history-title">Record Bab 1</h1></div>
+        <button class="button button-outline" id="history-back">← Kembali ke daftar bab</button>
+      </div>
+      <p class="lead history-lead">Baca kembali hasil percobaan dan buka penjelasan materi tanpa perlu memulai ronde baru.</p>
+      <div id="history-list" class="history-list"></div>
     </section>
 
     <section id="quiz-view" class="view" hidden>
