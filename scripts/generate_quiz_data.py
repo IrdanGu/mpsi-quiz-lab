@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 SOURCE = ROOT / "University" / "PSSI" / "materi" / "md" / "mssi-soal-bab-01-07.md"
 BOOK = ROOT / "University" / "PSSI" / "materi" / "md" / "buku-ajar-mssi-clean-200page.md"
 OUTPUT = Path(__file__).resolve().parents[1] / "data.js"
+ANSWER_OUTPUT = Path(__file__).resolve().parents[1] / "kunci-jawaban-pg.md"
 
 
 def source_sections(text: str) -> dict[str, str]:
@@ -116,9 +117,41 @@ def parse_questions(text: str, details: dict[str, str]) -> list[dict]:
     return questions
 
 
+def write_answer_key(questions: list[dict]) -> None:
+    lines = [
+        "---",
+        "title: Kunci Jawaban Pilihan Ganda PSSI Bab 1–7",
+        "tags: [mpssi, pssi, latihan, kunci-jawaban]",
+        "---",
+        "",
+        "# Kunci Jawaban Pilihan Ganda PSSI",
+        "",
+        "> [!info] Format ringkas",
+        "> Jawaban ditulis langsung di akhir setiap pertanyaan agar mudah dikenali saat mengulang materi.",
+        "",
+    ]
+    current_chapter = None
+    for question in questions:
+        if question["chapter"] != current_chapter:
+            current_chapter = question["chapter"]
+            lines.extend([
+                f"## Bab {current_chapter} — {question['chapterTitle']}",
+                "",
+            ])
+        prompt = re.sub(r"\s*\.{3,}\s*$", "", question["question"]).rstrip()
+        answer = question["options"][question["correctIndex"]]
+        if question["question"].rstrip().endswith(("?", ".")) and not re.search(r"\.{3,}\s*$", question["question"]):
+            line = f"{question['number']}. {prompt} — *{answer}*."
+        else:
+            line = f"{question['number']}. {prompt} *{answer}*."
+        lines.extend([line, ""])
+    ANSWER_OUTPUT.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
 def main() -> None:
     details = source_sections(BOOK.read_text(encoding="utf-8"))
     questions = parse_questions(SOURCE.read_text(encoding="utf-8"), details)
+    write_answer_key(questions)
     payload = json.dumps(questions, ensure_ascii=False, indent=2)
     OUTPUT.write_text(
         "// Generated from PSSI/materi/md/mssi-soal-bab-01-07.md.\n"
