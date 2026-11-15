@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Latihan pilihan ganda Manajemen Strategi Sistem Informasi Bab 1 sampai 7.">
+  <title>Quiz Lab — MPSI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+    <div class="topbar-inner">
+      <a class="brand" href="#" id="brand-link"><span class="brand-dot"></span><span>MPSI // QUIZ LAB</span></a>
+      <div class="topbar-meta"><span id="header-mode">PILIH BAB</span><span id="header-timer">00:00</span></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section id="chapter-view" class="view">
+      <div class="eyebrow">Latihan Penguasaan Materi</div>
+      <div class="hero-heading">
+        <div>
+          <h1>Pilih bab.<br><em>Uji pemahaman.</em></h1>
+          <p class="lead">Satu ronde berisi soal acak. Setiap percobaan disimpan agar kamu bisa melihat bagian yang masih perlu dikuasai.</p>
+        </div>
+        <div class="hero-stamp">PSSI<br><strong>01—07</strong></div>
+      </div>
+
+      <div class="chapter-grid" id="chapter-grid"></div>
+
+      <article class="boss-card" id="boss-card">
+        <div>
+          <div class="eyebrow boss-eyebrow">Ronde Boss · tersedia sejak awal</div>
+          <h2>Semua bab, satu tantangan.</h2>
+          <p>Soal acak dari Bab 1–7. Cocok untuk menguji apakah pemahamanmu sudah merata.</p>
+        </div>
+        <button class="button button-light" id="boss-start">Mulai Boss <span>→</span></button>
+      </article>
+
+      <div class="empty-state" id="empty-state" hidden>Belum ada record. Selesaikan satu ronde untuk melihat perkembanganmu.</div>
+    </section>
+
+    <section id="quiz-view" class="view" hidden>
+      <div class="quiz-heading">
+        <div>
+          <div class="eyebrow" id="quiz-eyebrow">Bab 1 · Ronde latihan</div>
+          <h1 id="quiz-title">Pertanyaan 01</h1>
+        </div>
+        <div class="question-counter" id="question-counter">01 / 10</div>
+      </div>
+      <div class="quiz-card">
+        <div class="question-meta"><span id="question-topic">KONSEP</span><span id="question-number">SOAL 01</span></div>
+        <h2 id="question-text"></h2>
+        <div id="options-container" class="options" role="radiogroup" aria-labelledby="question-text"></div>
+        <div class="quiz-footer">
+          <span class="keyboard-hint">Pilih dengan <kbd>A—D</kbd> · lanjut <kbd>Enter</kbd></span>
+          <button class="button button-dark" id="next-button" disabled>Berikutnya <span>→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="result-view" class="view" hidden>
+      <div class="result-heading">
+        <div><div class="eyebrow">Record percobaan tersimpan</div><h1 id="result-title">Ronde selesai.</h1></div>
+        <div class="result-score" id="result-score">0/10</div>
+      </div>
+      <div class="result-summary">
+        <div class="metric"><span>BENAR</span><strong id="result-correct">0</strong></div>
+        <div class="metric"><span>SALAH</span><strong id="result-wrong">0</strong></div>
+        <div class="metric"><span>AKURASI</span><strong id="result-accuracy">0%</strong></div>
+        <div class="metric"><span>WAKTU</span><strong id="result-time">00:00</strong></div>
+      </div>
+      <div class="feedback-banner" id="mastery-banner"></div>
+      <div class="review-section">
+        <div class="section-heading"><h2>Rincian jawaban</h2><span id="result-date"></span></div>
+        <div id="review-list" class="review-list"></div>
+      </div>
+      <div class="result-actions"><button class="button button-dark" id="result-next">Selanjutnya <span>→</span></button><button class="button button-outline" id="result-retry">Ulangi ronde</button></div>
+    </section>
+  </main>
+
+  <footer class="footer"><span>MANAGEMENT STRATEGIC INFORMATION SYSTEM</span><span>RECORDS ARE PART OF THE PRACTICE</span></footer>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
