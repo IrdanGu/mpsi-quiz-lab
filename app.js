@@ -1,7 +1,9 @@
 (() => {
   'use strict';
 
-  const QUESTIONS = window.QUIZ_QUESTIONS || [];
+  const PSSI_QUESTIONS = window.QUIZ_QUESTIONS || [];
+  const UTS_QUESTIONS = window.UTS_QUESTIONS || [];
+  const QUESTIONS = PSSI_QUESTIONS;
   const STORAGE_KEY = 'mpsi-quiz-records-v1';
   const CHAPTER_COUNT = 7;
   const ROUND_SIZE = 10;
@@ -89,6 +91,21 @@
       card.querySelector('.card-history').addEventListener('click', () => showHistory('chapter', chapter));
       grid.appendChild(card);
     }
+
+    const utsRecords = readRecords().filter((record) => record.mode === 'uts');
+    const utsLatest = utsRecords.at(-1);
+    const utsBest = utsRecords.reduce((max, record) => Math.max(max, record.accuracy), 0);
+    const utsStatus = utsLatest ? masteryFor(utsLatest.accuracy) : null;
+    const utsCard = document.createElement('article');
+    utsCard.className = 'chapter-card uts-card';
+    utsCard.innerHTML = `
+      <span class="chapter-no">UTS · PAK ERIK</span>
+      <span><h2>Manajemen Proyek</h2><p>${utsRecords.length ? `${utsRecords.length} percobaan · terbaik ${utsBest}%` : '7 soal latihan UTS'}</p></span>
+      <span class="chapter-status ${utsStatus ? utsStatus.className : ''}">${utsStatus ? utsStatus.label : 'Latihan UTS'}</span>
+      <span class="card-actions card-actions-stack"><button class="card-start button button-dark" type="button">Mulai latihan <span>→</span></button><button class="card-history button button-outline" type="button" ${utsRecords.length ? '' : 'disabled'}>Record sebelumnya${utsRecords.length ? ` (${utsRecords.length})` : ''}</button></span>`;
+    utsCard.querySelector('.card-start').addEventListener('click', () => startRound('uts'));
+    utsCard.querySelector('.card-history').addEventListener('click', () => showHistory('uts'));
+    grid.appendChild(utsCard);
   }
 
   function showView(view) {
@@ -111,14 +128,16 @@
   function startRound(mode, chapter = null) {
     state.mode = mode;
     state.chapter = chapter;
-    const pool = chapter ? QUESTIONS.filter((question) => question.chapter === chapter) : QUESTIONS;
-    const amount = Math.min(mode === 'boss' ? BOSS_SIZE : ROUND_SIZE, pool.length);
+    const pool = mode === 'uts'
+      ? UTS_QUESTIONS
+      : (chapter ? QUESTIONS.filter((question) => question.chapter === chapter) : QUESTIONS);
+    const amount = Math.min(mode === 'boss' ? BOSS_SIZE : (mode === 'uts' ? UTS_QUESTIONS.length : ROUND_SIZE), pool.length);
     state.questions = shuffle(pool).slice(0, amount);
     state.index = 0;
     state.answers = [];
     state.startedAt = new Date().toISOString();
     state.currentAnswered = false;
-    headerMode.textContent = mode === 'boss' ? 'RONDE BOSS' : `BAB ${chapter}`;
+    headerMode.textContent = mode === 'boss' ? 'RONDE BOSS' : mode === 'uts' ? 'UTS PAK ERIK' : `BAB ${chapter}`;
     startTimer();
     showView(quizView);
     renderQuestion();
@@ -129,10 +148,10 @@
     state.currentAnswered = false;
     const total = state.questions.length;
     progressBar.style.width = `${(state.index / total) * 100}%`;
-    $('quiz-eyebrow').textContent = state.mode === 'boss' ? 'Ronde Boss · semua bab' : `Bab ${state.chapter} · ronde latihan`;
+    $('quiz-eyebrow').textContent = state.mode === 'boss' ? 'Ronde Boss · semua bab' : state.mode === 'uts' ? 'UTS · Manajemen Proyek · Pak Erik' : `Bab ${state.chapter} · ronde latihan`;
     $('quiz-title').textContent = `Pertanyaan ${String(state.index + 1).padStart(2, '0')}`;
     $('question-counter').textContent = `${String(state.index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
-    $('question-topic').textContent = state.mode === 'boss' ? `BAB ${question.chapter}` : 'PILIHAN GANDA';
+    $('question-topic').textContent = state.mode === 'boss' ? `BAB ${question.chapter}` : question.topic || 'PILIHAN GANDA';
     $('question-number').textContent = `SOAL ${String(question.number).padStart(2, '0')}`;
     $('question-text').textContent = question.question;
     const options = $('options-container');
@@ -208,7 +227,7 @@
   }
 
   function renderResult(record) {
-    const title = record.mode === 'boss' ? 'Ronde Boss selesai.' : `Bab ${record.chapter} selesai.`;
+    const title = record.mode === 'boss' ? 'Ronde Boss selesai.' : record.mode === 'uts' ? 'Latihan UTS selesai.' : `Bab ${record.chapter} selesai.`;
     $('result-title').textContent = title;
     $('result-score').textContent = `${record.correct}/${record.total}`;
     $('result-correct').textContent = record.correct;
@@ -221,7 +240,9 @@
     banner.className = `feedback-banner ${mastery.className}`;
     banner.textContent = record.mode === 'boss'
       ? `${mastery.label}. ${mastery.detail}`
-      : `Bab ${record.chapter}: ${mastery.label}. ${mastery.detail}`;
+      : record.mode === 'uts'
+        ? `UTS Manajemen Proyek: ${mastery.label}. ${mastery.detail}`
+        : `Bab ${record.chapter}: ${mastery.label}. ${mastery.detail}`;
     const list = $('review-list');
     list.innerHTML = '';
     record.answers.forEach((answer, index) => {
@@ -230,7 +251,7 @@
       const top = document.createElement('div');
       top.className = 'review-top';
       const label = document.createElement('span');
-      label.textContent = `${record.mode === 'boss' ? `BAB ${answer.chapter} · ` : ''}SOAL ${String(index + 1).padStart(2, '0')}`;
+      label.textContent = `${record.mode === 'boss' ? `BAB ${answer.chapter} · ` : record.mode === 'uts' ? 'UTS · ' : ''}SOAL ${String(index + 1).padStart(2, '0')}`;
       const status = document.createElement('span');
       status.className = `review-status ${answer.isCorrect ? 'right' : 'wrong'}`;
       status.textContent = answer.isCorrect ? 'BENAR' : 'SALAH';
@@ -315,8 +336,8 @@
   }
 
   function showHistory(mode, chapter = null) {
-    const records = readRecords().filter((record) => record.mode === mode && (mode === 'boss' || record.chapter === chapter)).reverse();
-    $('history-title').textContent = mode === 'boss' ? 'Record Ronde Boss' : `Record Bab ${chapter}`;
+    const records = readRecords().filter((record) => record.mode === mode && (mode === 'boss' || mode === 'uts' || record.chapter === chapter)).reverse();
+    $('history-title').textContent = mode === 'boss' ? 'Record Ronde Boss' : mode === 'uts' ? 'Record UTS Manajemen Proyek' : `Record Bab ${chapter}`;
     const list = $('history-list');
     list.innerHTML = '';
     if (!records.length) {

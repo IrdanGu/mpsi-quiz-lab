@@ -1,12 +1,12 @@
 # Quiz Lab — MPSI
 
-Aplikasi latihan pilihan ganda untuk materi PSSI Bab 1–7.
+Aplikasi latihan pilihan ganda untuk materi PSSI Bab 1–7 dan latihan UTS Manajemen Proyek Pak Erik.
 
 ## Cara menggunakan
 
 1. Buka `index.html` di browser.
-2. Pilih Bab 1–7 atau **Ronde Boss**.
-3. Jawab 10 soal pada ronde bab atau 20 soal pada Ronde Boss.
+2. Pilih Bab 1–7, **UTS Manajemen Proyek**, atau **Ronde Boss**.
+3. Jawab 10 soal pada ronde bab, 7 soal pada latihan UTS, atau 20 soal pada Ronde Boss.
 4. Setelah ronde selesai, record otomatis disimpan di `localStorage` browser.
 
 ## Arsitektur
@@ -15,6 +15,8 @@ Aplikasi latihan pilihan ganda untuk materi PSSI Bab 1–7.
 - `styles.css` — tampilan editorial-minimalis yang dikembangkan dari template referensi.
 - `app.js` — state kuis, pengacakan, timer, histori, status penguasaan, dan review jawaban.
 - `data.js` — bank soal browser-ready hasil generate dari catatan PSSI.
+- `uts-data.js` — bank 7 soal latihan UTS Manajemen Proyek Pak Erik.
+- `kunci-jawaban-pg.md` — kunci jawaban ringkas PSSI Bab 1–7.
 - `scripts/generate_quiz_data.py` — generator bank soal dari `mssi-soal-bab-01-07.md`.
 
 ## Memperbarui bank soal
